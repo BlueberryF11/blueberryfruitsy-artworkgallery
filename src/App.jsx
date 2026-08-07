@@ -13,7 +13,7 @@ function App() {
 
   useEffect(() => {
     initServer().then(() => setIsReady(true))
-  }, [])
+  }, [initServer])
 
   return (
     <div className={isDarkMode ? 'dark' : 'light'}>
