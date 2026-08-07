@@ -1,1 +1,1 @@
-https://your-image-server.com
+https://imageserver.blueberryfruitsy.com
