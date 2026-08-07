@@ -1,0 +1,15 @@
+name = "blueberryfruitsy-artworkgallery"
+type = "javascript"
+account_id = ""
+workers_dev = true
+
+[build]
+command = "npm run build"
+cwd = "./"
+watch_paths = ["src/**/*.{jsx,js,css}"]
+
+[build.upload]
+format = "service-worker"
+
+[site]
+bucket = "./dist"
