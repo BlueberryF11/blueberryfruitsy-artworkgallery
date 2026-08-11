@@ -10,15 +10,18 @@ export const useGalleryStore = create((set) => ({
   error: null,
 
   initServer: async () => {
-    set({ loading: true })
+    set({ loading: true, error: null })
     try {
-      const response = await fetch('/server-name.txt')
-      const serverUrl = (await response.text()).trim()
+      const response = await fetch('/server-name.txt', { cache: 'no-store' })
+      if (!response.ok) throw new Error('Could not find the image server configuration.')
+
+      const serverUrl = (await response.text()).trim().replace(/\/$/, '')
+      if (!serverUrl) throw new Error('The image server URL is empty.')
+
       set({ serverUrl })
-      
       await useGalleryStore.getState().fetchCollections(serverUrl)
     } catch (err) {
-      set({ error: err.message })
+      set({ error: err.message, collections: [] })
     } finally {
       set({ loading: false })
     }
@@ -26,28 +29,28 @@ export const useGalleryStore = create((set) => ({
 
   fetchCollections: async (serverUrl) => {
     try {
-      const response = await fetch(`${serverUrl}/collections.json`)
-      const collections = await response.json()
-      set({ collections })
+      const response = await fetch(`${serverUrl}/collections.json`, { cache: 'no-store' })
+      if (!response.ok) throw new Error(`Image server returned ${response.status}.`)
+
+      const data = await response.json()
+      if (!Array.isArray(data)) throw new Error('The image server returned invalid collection data.')
+
+      const collections = data.map((collection) => ({
+        ...collection,
+        images: Array.isArray(collection.images)
+          ? collection.images.map((image) => ({
+              ...image,
+              url: image.url?.startsWith('http')
+                ? image.url
+                : `${serverUrl}/${String(image.url || '').replace(/^\//, '')}`,
+            }))
+          : [],
+      }))
+
+      set({ collections, error: null })
     } catch (err) {
       console.warn('Could not fetch collections:', err)
-      set({ collections: [
-        {
-          name: 'Digital Art',
-          description: 'Abstract digital artworks',
-          images: []
-        },
-        {
-          name: 'Photography',
-          description: 'Photography collection',
-          images: []
-        },
-        {
-          name: 'Music Visuals',
-          description: 'Visual interpretations of sound',
-          images: []
-        }
-      ]})
+      set({ collections: [], error: err.message })
     }
   },
 
