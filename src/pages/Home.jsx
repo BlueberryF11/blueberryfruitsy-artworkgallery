@@ -14,10 +14,9 @@ export default function Home() {
     }))
   )
 
-  const featured = artwork
-    .filter((image) => image.featured === true)
-    .slice(0, 6)
-
+  // Featured is now ONLY real artwork from the image server.
+  // There are no stock images, placeholders, or hard-coded fallback artwork.
+  const featured = artwork.slice(0, 6)
   const galleryPreview = artwork.slice(0, 8)
 
   const totalArtworks = artwork.length
@@ -56,8 +55,12 @@ export default function Home() {
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
           <h2 className="text-4xl font-bold text-white mb-4">Featured Art</h2>
-          <p className="text-gray-400 mb-12">Artwork I've chosen to feature.</p>
-          {loading ? <div className="min-h-96 rounded-2xl border border-white/10 bg-white/[0.03] flex items-center justify-center text-gray-400">Loading artwork...</div> : <Carousel images={featured} />}
+          <p className="text-gray-400 mb-12">Artwork from my collection.</p>
+          {loading ? (
+            <div className="min-h-96 rounded-2xl border border-white/10 bg-white/[0.03] flex items-center justify-center text-gray-400">Loading artwork...</div>
+          ) : (
+            <Carousel images={featured} />
+          )}
         </motion.div>
       </section>
 
