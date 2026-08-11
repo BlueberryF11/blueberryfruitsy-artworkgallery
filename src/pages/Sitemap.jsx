@@ -3,161 +3,79 @@ import { useGalleryStore } from '../store/galleryStore'
 
 export default function Sitemap() {
   const { collections } = useGalleryStore()
+  const artworks = collections.flatMap((collection) =>
+    (collection.images || []).map((image) => ({ ...image, collection: collection.name }))
+  )
 
-  const siteStructure = [
-    {
-      section: 'Main',
-      items: [
-        { name: 'Home', path: '/', description: 'Hero showcase with featured carousel' },
-        { name: 'Gallery', path: '/gallery', description: 'Browse all artworks and collections' },
-        { name: 'Sitemap', path: '/sitemap', description: 'Site navigation and structure' },
-      ],
-    },
-    {
-      section: 'Collections',
-      items: collections.map((col) => ({
-        name: col.name,
-        path: `/gallery/${col.name.toLowerCase()}`,
-        description: col.description,
-      })),
-    },
+  const pages = [
+    { name: 'Home', path: '/', description: 'The main page.' },
+    { name: 'Gallery', path: '/gallery', description: 'All of the artwork.' },
+    { name: 'Sitemap', path: '/sitemap', description: 'Every page and image link.' },
+    ...collections.map((collection) => ({
+      name: collection.name,
+      path: `/gallery/${encodeURIComponent(collection.name.toLowerCase())}`,
+      description: collection.description || `${collection.images?.length || 0} images`,
+    })),
   ]
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.6, ease: 'easeOut' },
-    },
-  }
 
   return (
     <div className="w-full pt-24 pb-20">
-      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
+      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-12">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-5xl font-bold text-white mb-4">Sitemap</h1>
-          <p className="text-xl text-gray-400">
-            Navigate through Blueberry Fruitsy's complete collection
-          </p>
+          <p className="text-xl text-gray-400">Pages, collections, and direct links to every image.</p>
         </motion.div>
       </section>
 
       <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <motion.div
-          className="space-y-12"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {siteStructure.map((section) => (
-            <motion.div key={section.section} variants={itemVariants}>
-              <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-1 h-8 bg-gradient-to-b from-blue-400 to-purple-500"></div>
-                {section.section}
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {section.items.map((item) => (
-                  <motion.a
-                    key={item.path}
-                    href={item.path}
-                    className="group relative p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 hover:border-blue-500/60 transition-all"
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-purple-500/0 group-hover:from-blue-500/20 group-hover:via-transparent group-hover:to-purple-500/20 transition-all duration-500" />
-
-                    <div className="relative">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-xl font-semibold text-blue-400 group-hover:text-blue-300 transition-colors">
-                          {item.name}
-                        </h3>
-                        <span className="text-gray-500 text-sm group-hover:text-gray-300 transition-colors">
-                          →
-                        </span>
-                      </div>
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        {item.description}
-                      </p>
-                      <p className="text-gray-600 text-xs mt-4 font-mono">
-                        {item.path}
-                      </p>
-                    </div>
-                  </motion.a>
-                ))}
+        <h2 className="text-3xl font-bold text-white mb-6">Pages</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {pages.map((item) => (
+            <a key={item.path} href={item.path} className="p-5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-blue-500/50 transition-all">
+              <div className="flex justify-between gap-4">
+                <h3 className="text-lg font-semibold text-white">{item.name}</h3>
+                <span className="text-gray-500">↗</span>
               </div>
-            </motion.div>
+              <p className="text-sm text-gray-400 mt-2">{item.description}</p>
+              <p className="text-xs text-gray-600 mt-3 font-mono">{item.path}</p>
+            </a>
           ))}
-        </motion.div>
+        </div>
       </section>
 
-      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-16 pt-16 border-t border-blue-500/20">
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8, staggerChildren: 0.1 }}
-          viewport={{ once: true }}
-        >
-          {[{ label: 'Total Pages', value: '3' }, { label: 'Collections', value: String(collections.length || '5') }, { label: 'Artworks', value: '100+' }, { label: 'Last Updated', value: 'Today' }].map((stat, idx) => (
-            <motion.div
-              key={idx}
-              className="text-center p-6 rounded-lg bg-blue-500/5 border border-blue-500/20"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <div className="text-3xl font-bold text-blue-400 mb-2">{stat.value}</div>
-              <div className="text-sm text-gray-400">{stat.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-16 pt-16 border-t border-blue-500/20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <h3 className="text-2xl font-bold text-white mb-8">Quick Navigation</h3>
-          <div className="flex flex-wrap gap-4">
-            <motion.a
-              href="/"
-              className="px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/30 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              ← Back to Home
-            </motion.a>
-            <motion.a
-              href="/gallery"
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Explore Gallery →
-            </motion.a>
+      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-16">
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-3xl font-bold text-white">Artwork links</h2>
+            <p className="text-gray-400 mt-2">{artworks.length} image{artworks.length === 1 ? '' : 's'} currently in the archive.</p>
           </div>
-        </motion.div>
+          <a href="/gallery" className="text-blue-400 hover:text-blue-300">Open gallery →</a>
+        </div>
+
+        <div className="space-y-3">
+          {artworks.map((image) => (
+            <div key={image.id || image.url} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/10">
+              <img src={image.url} alt="" className="w-20 h-20 rounded-lg object-cover bg-black/20" loading="lazy" />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-white font-medium truncate">{image.title || image.filename}</h3>
+                <p className="text-sm text-gray-500">{image.collection}</p>
+                <p className="text-xs text-gray-600 font-mono truncate mt-1">{image.url}</p>
+              </div>
+              <div className="flex gap-3 shrink-0">
+                <a href={image.url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 text-sm">Preview</a>
+                <a href={image.url} download={image.filename || 'artwork'} className="px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-400 text-sm">Download</a>
+              </div>
+            </div>
+          ))}
+          {artworks.length === 0 && <div className="p-10 rounded-xl border border-dashed border-white/10 text-center text-gray-500">No artwork has been uploaded yet.</div>}
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-16 pt-10 border-t border-white/10">
+        <div className="flex flex-wrap gap-3">
+          <a href="/" className="px-5 py-3 rounded-lg bg-white/10 text-white hover:bg-white/20">← Home</a>
+          <a href="/gallery" className="px-5 py-3 rounded-lg bg-blue-500 text-white hover:bg-blue-400">Gallery →</a>
+        </div>
       </section>
     </div>
   )
