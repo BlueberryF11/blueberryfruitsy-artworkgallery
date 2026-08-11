@@ -11,6 +11,24 @@ export default function GalleryPage() {
     ? collections.find((c) => c.name.toLowerCase() === collection.toLowerCase())
     : null
 
+  // "All Works" is the complete artwork archive, not an empty collection.
+  // Flatten every real image from every collection into one list.
+  const allWorks = collections.flatMap((col) =>
+    (Array.isArray(col.images) ? col.images : []).map((image) => ({
+      ...image,
+      collection: col.name,
+      collectionPath: col.path,
+    }))
+  )
+
+  // Newest first when the image server provides upload timestamps.
+  allWorks.sort((a, b) => {
+    if (a.uploaded && b.uploaded) return new Date(b.uploaded) - new Date(a.uploaded)
+    return String(a.title || a.filename || '').localeCompare(String(b.title || b.filename || ''))
+  })
+
+  const images = selectedCollection ? selectedCollection.images : allWorks
+
   return (
     <div className="w-full pt-24 pb-20">
       <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-16">
@@ -20,12 +38,12 @@ export default function GalleryPage() {
           transition={{ duration: 0.8 }}
         >
           <h1 className="text-5xl font-bold text-white mb-4">
-            {selectedCollection ? selectedCollection.name : 'Full Gallery'}
+            {selectedCollection ? selectedCollection.name : 'All Works'}
           </h1>
           <p className="text-xl text-gray-400">
             {selectedCollection
               ? selectedCollection.description
-              : 'Explore all collections and artworks'}
+              : `${allWorks.length} artwork${allWorks.length === 1 ? '' : 's'} from every collection`}
           </p>
         </motion.div>
       </section>
@@ -53,7 +71,7 @@ export default function GalleryPage() {
           {collections.map((col) => (
             <motion.a
               key={col.name}
-              href={`/gallery/${col.name.toLowerCase()}`}
+              href={`/gallery/${encodeURIComponent(col.name.toLowerCase())}`}
               className={`px-6 py-2 rounded-full font-semibold transition-all ${
                 selectedCollection?.name === col.name
                   ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/50'
@@ -69,7 +87,7 @@ export default function GalleryPage() {
       </section>
 
       <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <Gallery images={selectedCollection?.images || []} />
+        <Gallery images={images} />
       </section>
     </div>
   )
