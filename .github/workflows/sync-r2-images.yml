@@ -1,0 +1,53 @@
+name: Sync R2 images
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '47 3 * * *'
+
+permissions:
+  contents: write
+
+env:
+  RCLONE_CONFIG_R2_TYPE: s3
+  RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+  RCLONE_CONFIG_R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+  RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+  RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+  RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install rclone
+        run: curl -fsSL https://rclone.org/install.sh | sudo bash
+
+      - name: Sync R2 bucket into images/
+        env:
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          test -n "$R2_BUCKET" || { echo 'R2_BUCKET is not configured.'; exit 1; }
+          test -n "$RCLONE_CONFIG_R2_ACCESS_KEY_ID" || { echo 'R2_ACCESS_KEY_ID is not configured.'; exit 1; }
+          test -n "$RCLONE_CONFIG_R2_SECRET_ACCESS_KEY" || { echo 'R2_SECRET_ACCESS_KEY is not configured.'; exit 1; }
+          test -n "${{ secrets.R2_ACCOUNT_ID }}" || { echo 'R2_ACCOUNT_ID is not configured.'; exit 1; }
+          mkdir -p images
+          rclone sync "r2:${R2_BUCKET}" images/ --fast-list --create-empty-src-dirs
+
+      - name: Commit synced images when changed
+        run: |
+          if git diff --quiet -- images; then
+            echo 'images/ is unchanged.'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add images/
+          git commit -m 'chore: sync R2 images'
+          git push
