@@ -13,14 +13,15 @@ ROOT = Path.cwd()
 OUTPUT = ROOT / "sitemap.xml"
 EXCLUDED_DIRS = {".git", ".github", "node_modules"}
 HTML_EXTENSIONS = {".html", ".htm"}
+NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
 
 
 def page_url(relative: Path) -> str:
     path = relative.as_posix()
-    if path.lower().endswith("/index.html") or path.lower().endswith("/index.htm"):
-        path = path.rsplit("/", 1)[0] + "/"
-    elif path.lower() in {"index.html", "index.htm"}:
+    if path.lower() in {"index.html", "index.htm"}:
         path = ""
+    elif path.lower().endswith(("/index.html", "/index.htm")):
+        path = path.rsplit("/", 1)[0] + "/"
     else:
         path = quote(path, safe="/%:@-._~")
     return urljoin(BASE_URL.rstrip("/") + "/", path)
@@ -40,13 +41,11 @@ def discover_pages() -> list[str]:
 
 
 def write_sitemap(urls: list[str]) -> None:
-    ET.register_namespace("", "http://www.sitemaps.org/schemas/sitemap/0.9")
-    root = ET.Element("{http://www.sitemaps.org/schemas/sitemap/0.9}sitemapindex")
-    # A normal <urlset> is the correct format for a single sitemap.
-    root.tag = "{http://www.sitemaps.org/schemas/sitemap/0.9}urlset"
+    ET.register_namespace("", NS)
+    root = ET.Element(f"{{{NS}}}urlset")
     for url in urls:
-        item = ET.SubElement(root, "{http://www.sitemaps.org/schemas/sitemap/0.9}url")
-        loc = ET.SubElement(item, "{http://www.sitemaps.org/schemas/sitemap/0.9}loc")
+        item = ET.SubElement(root, f"{{{NS}}}url")
+        loc = ET.SubElement(item, f"{{{NS}}}loc")
         loc.text = url
 
     tree = ET.ElementTree(root)
